@@ -166,6 +166,9 @@ let camPitchTarget = -0.05;
 const tmpForward = new THREE.Vector3();
 const tmpRight = new THREE.Vector3();
 const zones = [];
+const hoverPlanes = [];
+let hoveredZoneIdx = null;
+let lastLabelIdx = null;
 let zoneLabelMesh = null;
 let voiceEnabled = false;
 let moonMixer = null;
@@ -392,15 +395,9 @@ const defaultInfo = {
 };
 
 const keyBindings = {
-	KeyW: "forward",
-	KeyZ: "forward",
 	ArrowUp: "forward",
-	KeyS: "back",
 	ArrowDown: "back",
-	KeyA: "left",
-	KeyQ: "left",
 	ArrowLeft: "left",
-	KeyD: "right",
 	ArrowRight: "right"
 };
 
@@ -468,32 +465,17 @@ function makeCanvasTexture(text, opts = {}){
 }
 
 function makeTiledTexture(opts = {}){
-	// Purple smooth ground with soft shadows
+	// Dark purple ground matching the scene background (sans motifs)
 	const size = opts.size || 512;
 	const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
 	const ctx = canvas.getContext('2d');
-	// subtle radial gradient background
-	const grd = ctx.createRadialGradient(size*0.4, size*0.4, size*0.2, size*0.6, size*0.6, size*0.8);
-	grd.addColorStop(0, '#8b7dc3');
-	grd.addColorStop(1, '#7360a3');
+
+	// Base radial gradient (deep violet)
+	const grd = ctx.createRadialGradient(size*0.5, size*0.5, size*0.05, size*0.5, size*0.5, size*0.9);
+	grd.addColorStop(0, '#140c18');
+	grd.addColorStop(1, '#0b0610');
 	ctx.fillStyle = grd;
 	ctx.fillRect(0,0,size,size);
-
-	// soft shadow blobs
-	const blobs = opts.blobs || [
-		{ x: 0.3, y: 0.35, r: 0.22, a: 0.18 },
-		{ x: 0.55, y: 0.45, r: 0.18, a: 0.16 },
-		{ x: 0.7, y: 0.3, r: 0.16, a: 0.14 }
-	];
-	blobs.forEach(b => {
-		const g = ctx.createRadialGradient(size*b.x, size*b.y, size*b.r*0.2, size*b.x, size*b.y, size*b.r);
-		g.addColorStop(0, `rgba(88,65,130,${b.a})`);
-		g.addColorStop(1, 'rgba(88,65,130,0)');
-		ctx.fillStyle = g;
-		ctx.beginPath();
-		ctx.arc(size*b.x, size*b.y, size*b.r, 0, Math.PI*2);
-		ctx.fill();
-	});
 
 	const tex = new THREE.CanvasTexture(canvas);
 	tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
@@ -542,6 +524,18 @@ function createHouseStructure(group, interactiveCollector = []){
 		addRoomProps(section, zone);
 		group.add(zone);
 		zones[idx] = zone;
+
+		// Hover plane (independant de la visibilité de la zone)
+		const hoverPlane = new THREE.Mesh(
+			new THREE.PlaneGeometry(w-0.2, h-0.2),
+			new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.0, depthWrite:false })
+		);
+		hoverPlane.rotation.x = -Math.PI/2;
+		hoverPlane.position.set(section.center.x, 0.05, section.center.z);
+		hoverPlane.userData = { zoneHover: idx };
+		group.add(hoverPlane);
+		hoverPlanes[idx] = hoverPlane;
+		interactiveCollector.push(hoverPlane);
 	});
 
 	// corridors / portes entre pièces pour navigation fluide
@@ -589,7 +583,7 @@ function attachZoneLabel(section, zone){
 }
 
 function addHallInstallations(zone){
-	const words = ['TRACE','MURMUR','PROFILE','INTENTION','MIRROR','ECHO'];
+	const words = ['TRACE','PIRATAGE','PHISHING','CYBER','EMPREINTE','NUMERIQUE'];
 	for (let i =0; i<6; i++){
 		const tex = makeCanvasTexture(words[i], { fontSize: 48, color: '#cfefff' });
 		const mat = new THREE.MeshPhysicalMaterial({ map: tex, transmission:0.5, transparent:true, opacity:0.8 });
@@ -910,8 +904,11 @@ function addEnvironment(scene){
 	const sky = new THREE.Mesh(skyGeo, skyMat);
 	scene.add(sky);
 
-	const groundTex = makeTiledTexture({ colors:['#3b2a54','#2a1c3d'], size:256, repeatU:16, repeatV:12 });
-	const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshStandardMaterial({ map: groundTex, roughness:0.8, metalness:0.05 }));
+	// Ground matches the deep purple background (flat, sans fog ni éclairage)
+	const ground = new THREE.Mesh(
+		new THREE.PlaneGeometry(200, 200),
+		new THREE.MeshBasicMaterial({ color: '#120b1d', fog: false })
+	);
 	ground.rotation.x = -Math.PI/2;
 	ground.position.y = -0.02;
 	scene.add(ground);
@@ -1368,6 +1365,11 @@ function updateActionButton(slug){
 				n = n.parent;
 			}
 			if (isMoon){ toggleMoonBubble(true); return; }
+			// click sur une zone = téléportation
+			if (hit.userData.zoneHover !== undefined){
+				goTo(hit.userData.zoneHover);
+				return;
+			}
 			if (hit.userData.slug){
 				setInfoBySlug(hit.userData.slug);
 				const piece = dataPieces.find(p=>p.slug===hit.userData.slug);
@@ -1384,6 +1386,7 @@ function updateActionButton(slug){
 		const changed = idx !== currentSection || opts.force;
 		currentSection = idx;
 		attachZoneLabel(section, zones[idx]);
+		lastLabelIdx = idx;
 		// isoler la pièce (visibilité)
 		zones.forEach((z, i)=>{ if (z) z.visible = (i === idx); });
 		updateGuide(idx);
@@ -1530,7 +1533,24 @@ function updateActionButton(slug){
 		camera.position.lerp(camPos, cameraOffset.lag);
 		camera.lookAt(camTarget);
 
-		raycaster.setFromCamera(pointer, camera); const hits = raycaster.intersectObjects(interactiveObjects, true); interactiveObjects.forEach(o=>{ if (hits.length && hits[0].object===o){ gsap.to(o.scale, { x:1.08, y:1.08, z:1.08, duration:0.18 }); } else { gsap.to(o.scale, { x:1, y:1, z:1, duration:0.6 }); } });
+		raycaster.setFromCamera(pointer, camera);
+		const hits = raycaster.intersectObjects(interactiveObjects, true);
+		hoveredZoneIdx = null;
+		interactiveObjects.forEach(o=>{ if (hits.length && hits[0].object===o){ gsap.to(o.scale, { x:1.08, y:1.08, z:1.08, duration:0.18 }); } else { gsap.to(o.scale, { x:1, y:1, z:1, duration:0.6 }); } });
+		if (hits.length){
+			const hoverHit = hits.find(h => h.object && h.object.userData && h.object.userData.zoneHover !== undefined);
+			if (hoverHit) hoveredZoneIdx = hoverHit.object.userData.zoneHover;
+		}
+		const desiredLabelIdx = (hoveredZoneIdx !== null) ? hoveredZoneIdx : currentSection;
+		if (desiredLabelIdx !== lastLabelIdx && zones[desiredLabelIdx]){
+			attachZoneLabel(sections[desiredLabelIdx], zones[desiredLabelIdx]);
+			lastLabelIdx = desiredLabelIdx;
+		}
+		zones.forEach((z, i)=> {
+			if (!z) return;
+			const shouldShow = (i === currentSection) || (hoveredZoneIdx === i);
+			z.visible = shouldShow;
+		});
 		if (particleGeo){ const arr = particleGeo.attributes.position.array; for (let i=0;i<particleCount;i++){ const idx=i*3+1; arr[idx] += Math.sin(t*0.4 + i)*0.0008; if (arr[idx] < 0.1) arr[idx] = 0.9 + Math.random()*2.4; } particleGeo.attributes.position.needsUpdate = true; }
 		renderer.render(scene, camera);
 		requestAnimationFrame(animate);
