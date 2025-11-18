@@ -1,6 +1,6 @@
-# House of Glass — Guide et API Moon
+# House of Glass — Guide et API Agent
 
-Expérience interactive en Three.js avec un compagnon “Lune” qui répond via une API locale (Gemini/OpenAI) et un fallback hors-ligne partagé.
+Expérience interactive en Three.js avec un compagnon qui répond via une API locale (Gemini) et un fallback hors-ligne partagé.
 
 ## Démarrage rapide
 ```bash
@@ -12,7 +12,6 @@ Ouvre ensuite `http://localhost:3000` dans le navigateur.
 ## Variables d’environnement (.env)
 ```
 GEMINI_API_KEY=...   # clé Google Generative Language API
-# ou OPENAI_API_KEY=... si tu veux ce provider
 ```
 Si aucune clé n’est fournie ou si l’API échoue, le bot répond avec le fallback local.
 
@@ -34,9 +33,9 @@ curl -X POST http://localhost:3000/api/moon \
 - `startExperience()` initialise la scène et doit être déclenchée après un geste utilisateur (bouton Entrer).
 
 ## Fichiers clés
-- `server.js` : backend Express, appels Gemini/OpenAI, fallback commun.
+- `server.js` : backend Express, appels Gemini, fallback commun.
 - `moonReplies.json` : déclencheurs + réponses de secours (partagé front/back).
-- `main.js` : scène Three.js, navigation, chat Moon côté client.
+- `main.js` : scène Three.js, navigation, chat côté client.
 - `style.css` : styles et HUD.
 
 ## Notes
