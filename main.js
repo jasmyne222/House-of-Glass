@@ -113,6 +113,7 @@ const zeroVec = new THREE.Vector3();
 let gltfCharacter = null;
 let gltfMixer = null;
 let gltfIdleAction = null;
+let gltfCharacterIdle = null;
 let useProceduralSwing = false; // true if no GLTF animation available
 let cameraOffset = { distance: 7, height: 3.5, lag: 0.12, min: 3, max: 12 };
 const moveSpeeds = { walk: 3.0 };
@@ -120,10 +121,41 @@ let camYaw = -Math.PI/3.5;
 let camYawTarget = 0;
 let camDrag = false;
 let camLastX = 0;
+let camLastY = 0;
+let camPitch = -0.05;
+let camPitchTarget = -0.05;
 const tmpForward = new THREE.Vector3();
 const tmpRight = new THREE.Vector3();
 const zones = [];
+let zoneLabelMesh = null;
 let voiceEnabled = false;
+let moonMixer = null;
+let moonMesh = null;
+const moonFollowOffset = new THREE.Vector3(0.8, 1.8, -1.2);
+const moonTarget = new THREE.Vector3();
+// Character presets (per-model overrides)
+const characterOptions = {
+	loup: {
+		label: 'Loup',
+		walk: './assets/loup.glb',
+		idle: './assets/loup_statique.glb',
+		scaleMultiplier: 1,
+		walkLift: -0.9,
+		idleLift: 0.02,
+		idleRotationX: Math.PI / 2,
+		meshYaw: 0
+	},
+	cameraman: {
+		label: 'Cameraman',
+		walk: './assets/cameraman_walking.glb',
+		idle: './assets/cameraman_walking_statique.glb',
+		scaleMultiplier: 2.2,   // bigger than loup
+		walkLift: -0.6,          // lift animated mesh higher
+		idleLift: 0.05,          // lift static mesh
+		meshYaw: Math.PI // face forward instead of backwards
+	}
+};
+const defaultCharacterId = 'cameraman';
 
 const interactionState = {
 	social: [],
@@ -183,6 +215,14 @@ function pickSome(list, count){
 	return result;
 }
 
+function alignMeshToGround(mesh, lift = 0){
+	// Align a mesh so its lowest point sits on y=0, with an optional lift (can be negative).
+	mesh.updateWorldMatrix(true, true);
+	const box = new THREE.Box3().setFromObject(mesh);
+	const minY = box.min.y;
+	mesh.position.y = mesh.position.y - minY + lift;
+}
+
 const roomAccent = {
 	hall: 0xbee9ff,
 	social: 0xffbfe9,
@@ -196,22 +236,20 @@ const dataPieces = [
 	{
 		slug: "social",
 		title: "Salon des Réseaux",
-		intro: "Stories, likes, watch time et DM construisent un double numérique plus bavard que toi.",
+		intro: "Stories, likes et temps de visionnage dressent ton profil social en continu.",
 		insights: [
-			"Les algorithmes infèrent opinions politiques, humeur du jour et niveau d'engagement à partir des signaux faibles.",
-			"Les contacts fréquents permettent de cartographier ton réseau social et d'estimer ton influence.",
-			"Les stories géolocalisées dévoilent une routine quotidienne exploitable par les annonceurs."
+			"Les signaux faibles (emojis, rythme de scroll) révèlent humeur et opinions.",
+			"La fréquence des échanges cartographie ton influence et tes cercles proches."
 		],
 		color: "#ffb3ec"
 	},
 	{
 		slug: "commerce",
 		title: "Cuisine des Achats",
-		intro: "Chaque panier, abonnement ou livraison renseigne ton pouvoir d'achat et tes rituels.",
+		intro: "Chaque panier et abonnement laisse une empreinte économique.",
 		insights: [
-			"Les achats récurrents dessinent un score socio-économique qui alimente le profilage pub.",
-			"Les livraisons temporelles (soir/matin) dévoilent rythme et contraintes personnelles.",
-			"Partager un programme de fidélité croise tes goûts avec ceux de milliers d'utilisateurs similaires."
+			"Les achats récurrents nourrissent un score socio-éco repris par la pub.",
+			"Horaires et lieux de livraison révèlent tes contraintes quotidiennes."
 		],
 		color: "#ffd68f"
 	},
@@ -220,31 +258,28 @@ const dataPieces = [
 		title: "Couloir des Déplacements",
 		intro: "Les traces GPS, trajets et bornes Wi-Fi dessinent ton territoire intime.",
 		insights: [
-			"Deux semaines de positions suffisent pour repérer domicile, études/travail et lieux sensibles.",
-			"Les horaires de déplacement révèlent si tu vis seul·e, en colocation ou en famille.",
-			"La synchronisation avec d'autres appareils permet de déduire ton cercle proche."
+			"Quelques jours de positions suffisent pour trouver domicile et lieux sensibles.",
+			"Les horaires de trajets déduisent mode de vie (solo, coloc, famille)."
 		],
 		color: "#aee6ff"
 	},
 	{
 		slug: "sensibles",
 		title: "Chambre des Confidences",
-		intro: "Santé, sommeil, journaling et messageries privées sont classés \"données sensibles\".",
+		intro: "Santé, sommeil et journaling sont des données sensibles protégées.",
 		insights: [
-			"Ces données exigent un consentement explicite (RGPD art.9) mais beaucoup d'apps les recopient vers des serveurs tiers.",
-			"Le croisement humeur + achats + sommeil alimente des scores de stabilité émotionnelle.",
-			"Une fuite de ces traces peut impacter assurances, employabilité ou réputation."
+			"Le croisement humeur + achats + sommeil sert aux scores d'appétence ou d'assurance.",
+			"Une fuite impacte réputation, assurance ou employabilité."
 		],
 		color: "#d0c5ff"
 	},
 	{
 		slug: "control",
 		title: "Bureau de Contrôle",
-		intro: "Ici, le profil consolidé se projette à l'écran et tu peux décider quoi couper ou corriger.",
+		intro: "Dernière étape : décider ce que tu coupes, exportes ou corriges.",
 		insights: [
-			"Combine les droits RGPD (accès, rectification, portabilité, effacement) pour reprendre la main.",
-			"Paramètre chaque grande plateforme : confidentialité, pubs personnalisées, historique de localisation.",
-			"Active des outils de prévention (navigateurs privés, gestionnaires de permissions, bloqueurs de pisteurs)."
+			"Droits RGPD : accès, rectification, portabilité et effacement.",
+			"Désactive pubs ciblées, nettoie historiques et vérifie permissions."
 		],
 		color: "#f1ffb5"
 	}
@@ -252,92 +287,79 @@ const dataPieces = [
 
 const roomChoices = {
 	social: [
-		{ label: "Selfies + stories géolocalisées", result: ["Profil 'social actif'", "Publicités sorties/bars + ciblage lieu de vie"] },
-		{ label: "Thread militant + sondage", result: ["Profil engagé", "Micro-ciblage politique et causes"] },
-		{ label: "VLOG sport + recettes", result: ["Style de vie healthy premium", "Partenariats fitness, compléments"] }
+		{ label: "Publier stories géolocalisées", result: ["Profil social actif", "Ciblage lieu de vie + sorties"] },
+		{ label: "Relayer un débat", result: ["Profil engagé", "Micro-ciblage politique/causes"] }
 	],
 	commerce: [
-		{ label: "Panier bio + box beauté", result: ["Score socio-éco élevé", "Recommandations cosmétiques clean"] },
-		{ label: "Gaming + fast-food nocturne", result: ["Profil gamer tardif", "Offres livraison express, crédits rapide"] },
-		{ label: "Voyages low-cost + hôtels", result: ["Voyageur fréquent", "Assurances annulation, cartes multi-devises"] }
+		{ label: "Panier bio + box beauté", result: ["Score socio-éco élevé", "Reco cosmétiques clean"] },
+		{ label: "Gaming + fast-food tardif", result: ["Profil gamer nocturne", "Offres express/abonnements"] }
 	],
 	mobility: [
 		{ label: "Domicile ↔ bureau ↔ salle", result: ["Routine 8h-22h", "Ciblage transports/mobilité douce"] },
-		{ label: "Campus ↔ stage ↔ bibliothèque", result: ["Statut étudiant", "Banques jeunes, bourses"] },
-		{ label: "École ↔ courses ↔ maison", result: ["Probable parent", "Assurances famille, drive"] }
+		{ label: "Campus ↔ bibliothèque", result: ["Profil étudiant", "Banques jeunes/bourses"] }
 	],
 	sensibles: [
 		{ label: "Activer sommeil + humeur", result: ["Profil émotionnel fin", "Risque fuite data sensible (assurances)"] },
-		{ label: "Capteurs santé + journal", result: ["Score bien-être avancé", "Partage potentiel vers tiers"] },
-		{ label: "Messageries + notes privées", result: ["Métadonnées relationnelles", "Profil social intime déduit"] }
+		{ label: "Capteurs santé", result: ["Score bien-être", "Partage potentiel vers tiers"] }
 	],
 	control: [
-		{ label: "Exporter mes données", result: ["Export complet récupéré", "Tu peux vérifier ce qui circule"] },
-		{ label: "Couper pubs personnalisées", result: ["Ciblage générique", "Moins de profilage comportemental"] },
-		{ label: "Nettoyage 90 jours", result: ["Purge recherches/historiques", "Réduit la rétention involontaire"] }
+		{ label: "Exporter mes données", result: ["Export complet", "Tu vérifies ce qui circule"] },
+		{ label: "Couper pubs personnalisées", result: ["Ciblage générique", "Moins de profilage"] }
 	]
 };
 
 const roomActions = {
 	social: {
-		label: "Publier 3 posts",
+		label: "Générer la fiche sociale",
 		handler: () => {
-			const picks = pickSome(socialPosts, 3);
-			const summary = picks.map(p => `• ${p.label} → ${p.inference}`).join('\n');
-			const highlight = picks[Math.floor(Math.random() * picks.length)];
 			return {
-				title: "Fiche générée",
+				title: "Lecture sociale",
 				lines: [
-					`Posts choisis : ${picks.map(p => p.label).join(', ')}`,
-					`Déduction clé : ${highlight.note}`,
-					`Catégorie annoncée : ${highlight.inference}`
+					"Profil social actif + influence estimée.",
+					"Publicités : sorties, événements, cercles proches."
 				]
 			};
 		}
 	},
 	commerce: {
-		label: "Composer un panier",
+		label: "Analyser le panier",
 		handler: () => {
-			const picks = pickSome(commerceItems, 2);
 			return {
-				title: "Profil panier",
-				lines: picks.map(p => `• ${p.label} — ${p.insight}`)
+				title: "Lecture achats",
+				lines: [
+					"Score socio-éco mis à jour.",
+					"Tactiques : fidélité, cross-sell, rétention."
+				]
 			};
 		}
 	},
 	mobility: {
-		label: "Tracer un trajet",
+		label: "Lire le trajet",
 		handler: () => {
-			const pick = randomFrom(mobilityRoutes);
 			return {
-				title: "Lecture du trajet",
-				lines: [
-					`Itinéraire : ${pick.route}`,
-					...pick.deductions
-				]
+				title: "Lecture déplacements",
+				lines: ["Routine géo détectée.", "Ciblage transports + lieux de vie."]
 			};
 		}
 	},
 	sensibles: {
-		label: "Modifier les permissions",
+		label: "Scanner les données sensibles",
 		handler: () => {
-			const picks = pickSome(sensitivePermissions, 3);
 			return {
-				title: "Impact des permissions",
-				lines: picks.map(p => `• ${p.label} : ${p.impact}`)
+				title: "Impact données sensibles",
+				lines: [
+					"Score bien-être/risque mis à jour.",
+					"Attention : assurances et réputation impactées."
+				]
 			};
 		}
 	},
 	control: {
-		label: "Appliquer une action",
+		label: "Proposer une action",
 		handler: () => {
-			const pick = randomFrom(controlActions);
 			return {
-				title: "Action recommandée",
-				lines: [
-					`Action : ${pick.action}`,
-					`Effet : ${pick.impact}`
-				]
+				title: "Action rapide",
+				lines: ["Exporter ou corriger tes données.", "Nettoyer historiques + pubs ciblées."]
 			};
 		}
 	}
@@ -456,14 +478,6 @@ function createHouseStructure(group, interactiveCollector = []){
 	floor.position.z = -2;
 	group.add(floor);
 
-	// Light beams au plafond (effet néon)
-	const beamMat = new THREE.MeshStandardMaterial({ color:0xff9ce8, emissive:0xff8de0, emissiveIntensity:0.4, transparent:true, opacity:0.35 });
-	for (let i=0;i<3;i++){
-		const beam = new THREE.Mesh(new THREE.BoxGeometry(16,0.08,0.6), beamMat);
-		beam.position.set(0,3.0,-i*4);
-		group.add(beam);
-	}
-
 	sections.forEach((section, idx) => {
 		const zone = new THREE.Group();
 		zone.position.set(section.center.x, 0, section.center.z);
@@ -483,26 +497,9 @@ function createHouseStructure(group, interactiveCollector = []){
 		pad.position.set(0,0.01,0);
 		zone.add(pad);
 
-		const lowWall = new THREE.Mesh(new THREE.BoxGeometry(w-0.3, 0.4, h-0.3), new THREE.MeshPhysicalMaterial({ color: padColor, transparent:true, opacity:0.18, roughness:0.15 }));
-		lowWall.position.set(0,0.2,0);
-		zone.add(lowWall);
-
-		const labelTex = makeCanvasTexture(section.label.toUpperCase(), { fontSize: 28, color: '#ffffff' });
-		const labelMat = new THREE.MeshPhysicalMaterial({ map: labelTex, transparent:true, opacity:0.9, transmission:0.4 });
-		labelMat.map.encoding = THREE.sRGBEncoding;
-		const label = new THREE.Mesh(new THREE.PlaneGeometry(2.8,0.8), labelMat);
-		label.position.set(0, 2.0, h/2 + 0.1);
-		zone.add(label);
 		const doorHeight = 2.2;
 		const doorWidth = 1.3;
-		['N','S','E','W'].forEach((dir)=>{
-			const door = new THREE.Mesh(new THREE.BoxGeometry(doorWidth, doorHeight, 0.1), new THREE.MeshStandardMaterial({ color:0xffffff, transparent:true, opacity:0.05 }));
-			if (dir==='N'){ door.position.set(0, doorHeight/2, -h/2); }
-			if (dir==='S'){ door.position.set(0, doorHeight/2, h/2); }
-			if (dir==='E'){ door.position.set(w/2, doorHeight/2, 0); door.rotation.y = Math.PI/2; }
-			if (dir==='W'){ door.position.set(-w/2, doorHeight/2, 0); door.rotation.y = Math.PI/2; }
-			zone.add(door);
-		});
+	// Open-plan layout: no per-wall glass panels/doors
 
 		if (section.slug){
 			addHotspotsForSection(section, zone, interactiveCollector);
@@ -540,6 +537,26 @@ function createHouseStructure(group, interactiveCollector = []){
 	});
 }
 
+function attachZoneLabel(section, zone){
+	if (!section || !zone) return;
+	if (!zoneLabelMesh){
+		const labelTex = makeCanvasTexture(section.label.toUpperCase(), { fontSize: 28, color: '#ffffff' });
+		const labelMat = new THREE.MeshPhysicalMaterial({ map: labelTex, transparent:true, opacity:0.9, transmission:0.4, side: THREE.FrontSide });
+		labelMat.map.encoding = THREE.sRGBEncoding;
+		zoneLabelMesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 0.9), labelMat);
+		zoneLabelMesh.name = 'zoneLabel';
+	}
+	const newTex = makeCanvasTexture(section.label.toUpperCase(), { fontSize: 28, color: '#ffffff' });
+	newTex.encoding = THREE.sRGBEncoding;
+	if (zoneLabelMesh.material.map) zoneLabelMesh.material.map.dispose();
+	zoneLabelMesh.material.map = newTex;
+	zoneLabelMesh.material.needsUpdate = true;
+	zoneLabelMesh.position.set(0, 1.6, 0);
+	zoneLabelMesh.rotation.set(0, 0, 0);
+	if (zoneLabelMesh.parent) zoneLabelMesh.parent.remove(zoneLabelMesh);
+	zone.add(zoneLabelMesh);
+}
+
 function addHallInstallations(zone){
 	const words = ['TRACE','MURMUR','PROFILE','INTENTION','MIRROR','ECHO'];
 	for (let i =0; i<6; i++){
@@ -569,8 +586,9 @@ function addControlDesk(zone){
 function addHotspotsForSection(section, zone, interactiveCollector){
 	const piece = dataPieces.find(p => p.slug === section.slug);
 	if (!piece) return;
-	const tex = makeCanvasTexture(piece.title.toUpperCase(), { fontSize: 30, color: piece.color || '#fff' });
-	const mat = new THREE.MeshPhysicalMaterial({ map: tex, transparent:true, opacity:0.85, transmission:0.6, side:THREE.DoubleSide });
+	// Hide textual label (avoid duplicate banners); keep panel for interaction hitbox
+	const tex = makeCanvasTexture(' ', { fontSize: 1, color: 'rgba(0,0,0,0)', bg: 'rgba(0,0,0,0)' });
+	const mat = new THREE.MeshPhysicalMaterial({ map: tex, transparent:true, opacity:0.01, transmission:0.0, side:THREE.DoubleSide });
 	mat.map.encoding = THREE.sRGBEncoding;
 	const panel = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 1.0), mat);
 	panel.position.set(0, 1.45, -0.2);
@@ -578,94 +596,10 @@ function addHotspotsForSection(section, zone, interactiveCollector){
 	zone.add(panel);
 	interactiveCollector.push(panel);
 
-	const orbMat = new THREE.MeshStandardMaterial({ color: piece.color || '#ffffff', emissive: piece.color || 0xffffff, emissiveIntensity: 0.45, transparent:true, opacity:0.9 });
-		const orbPositions = [
-			{ x: 1.2, z: 0 },
-			{ x: -1.2, z: 0 },
-			{ x: 0, z: -1.1 }
-		];
-	orbPositions.forEach(pos => {
-		const orb = new THREE.Mesh(new THREE.SphereGeometry(0.18, 32, 32), orbMat.clone());
-		orb.position.set(pos.x, 1.1, pos.z);
-		orb.userData = { slug: piece.slug };
-		zone.add(orb);
-		interactiveCollector.push(orb);
-	});
 }
 
-function addRoomProps(section, zone){
-	const glassMat = new THREE.MeshPhysicalMaterial({ color:0xffffff, transmission:0.7, transparent:true, opacity:0.65, roughness:0.1 });
-	const decoTex = makeTiledTexture({ colors:['#f9f3ff','#f5e8ff'], size:96, repeatU:3, repeatV:3 });
-	const decoMat = new THREE.MeshStandardMaterial({ map: decoTex, roughness:0.6, metalness:0.05, transparent:true, opacity:0.9 });
-	if (section.id === 'hall'){
-		const columnMat = glassMat.clone();
-		columnMat.opacity = 0.3;
-		for (let i=0;i<4;i++){
-			const column = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,2.6,24), columnMat);
-			column.position.set(i%2?1.9:-1.9,1.3,-1 - i*1.2);
-			zone.add(column);
-		}
-	}
-	if (section.id === 'social'){
-		const sofa = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.5,0.8), decoMat.clone());
-		sofa.position.set(0,0.35,1.2);
-		zone.add(sofa);
-		const table = new THREE.Mesh(new THREE.CylinderGeometry(0.6,0.6,0.08,32), decoMat.clone());
-		table.position.set(0,0.55,0.4);
-		zone.add(table);
-		const screen = new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,0.05,32,1,true), new THREE.MeshStandardMaterial({ color:0xbbe4ff, transparent:true, opacity:0.45 }));
-		screen.rotation.x = Math.PI/2;
-		screen.position.set(0,1.8,-1.6);
-		zone.add(screen);
-	}
-	if (section.id === 'commerce'){
-		const island = new THREE.Mesh(new THREE.BoxGeometry(2.4,0.4,1.0), decoMat.clone());
-		island.position.set(0,0.3,0.4);
-		zone.add(island);
-		for (let i=0;i<3;i++){
-			const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.35,16), decoMat.clone());
-			jar.position.set(-0.8 + i*0.8,0.55,-0.9);
-			zone.add(jar);
-		}
-		const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.25,1.6,2.3), decoMat.clone());
-		shelf.position.set(-2.4,0.9,0);
-		zone.add(shelf);
-	}
-	if (section.id === 'mobility'){
-		const path = new THREE.Mesh(new THREE.PlaneGeometry(1.4,3.5), new THREE.MeshStandardMaterial({ color:0x9fe0ff, transparent:true, opacity:0.5, roughness:0.2 }));
-		path.rotation.x = -Math.PI/2;
-		path.position.set(0,0.01,-0.5);
-		zone.add(path);
-		const pylonMat = glassMat.clone();
-		pylonMat.opacity = 0.8;
-		for (let i=0;i<4;i++){
-			const pylon = new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,1.2,12), pylonMat);
-			pylon.position.set(-1.6 + i*1.1,0.6,1.4);
-			zone.add(pylon);
-		}
-		const compass = new THREE.Mesh(new THREE.CircleGeometry(0.9,32), new THREE.MeshStandardMaterial({ color:0xbdefff, transparent:true, opacity:0.35 }));
-		compass.rotation.x = -Math.PI/2;
-		compass.position.set(0,0.02,1.2);
-		zone.add(compass);
-	}
-	if (section.id === 'sensibles'){
-		const bedBase = new THREE.Mesh(new THREE.BoxGeometry(2.0,0.3,1.3), decoMat.clone());
-		bedBase.position.set(0,0.25,0.4);
-		zone.add(bedBase);
-		const canopy = new THREE.Mesh(new THREE.CylinderGeometry(1.0,1.0,0.05,28), decoMat.clone());
-		canopy.rotation.x = Math.PI/2;
-		canopy.position.set(0,2.0,0.4);
-		zone.add(canopy);
-		const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.3,24,24), new THREE.MeshStandardMaterial({ color:0xfff0f8, emissive:0xffc2e8, emissiveIntensity:0.5, transparent:true, opacity:0.6 }));
-		lamp.position.set(1.4,1.6,-0.6);
-		zone.add(lamp);
-	}
-	if (section.id === 'control'){
-		const screens = new THREE.Mesh(new THREE.BoxGeometry(2.8,0.1,0.9), new THREE.MeshStandardMaterial({ color:0xcdfcff, emissive:0x9adfff, transparent:true, opacity:0.7 }));
-		screens.position.set(0,1.4,-0.6);
-		screens.rotation.x = -Math.PI/10;
-		zone.add(screens);
-	}
+function addRoomProps(){
+	// Decorative 3D props removed for cleaner, open rooms.
 }
 
 function createHumanoid(){
@@ -785,12 +719,22 @@ function createHumanoid(){
 	return g;
 }
 
-async function createCharacterAvatar(parent){
+async function createCharacterAvatar(parent, characterOpt = characterOptions[defaultCharacterId]){
 	const loader = new GLTFLoader();
-	const modelURL = './assets/lapin.glb'; // place your GLB model here
+	const modelURL = characterOpt?.walk || characterOptions[defaultCharacterId].walk;
+	const idleModelURL = characterOpt?.idle || characterOptions[defaultCharacterId].idle;
 	let avatar = null;
 	try{
-		const gltf = await loader.loadAsync(modelURL);
+		const [gltf, gltfIdle] = await Promise.all([
+			loader.loadAsync(modelURL),
+			loader.loadAsync(idleModelURL).catch(()=>null)
+		]);
+
+		// root container to ease switching between animated & idle meshes
+		const avatarRoot = new THREE.Group();
+		avatarRoot.position.set(0,0,sections[0].center ? sections[0].center.z : 0);
+		parent.add(avatarRoot);
+
 		gltfCharacter = gltf.scene;
 		gltfCharacter.traverse((child) => {
 			if (child.isMesh){
@@ -802,10 +746,37 @@ async function createCharacterAvatar(parent){
 		const box = new THREE.Box3().setFromObject(gltfCharacter);
 		const size = new THREE.Vector3();
 		box.getSize(size);
-		const scale = 2.1 / Math.max(size.x, size.y, size.z);
-		gltfCharacter.scale.setScalar(scale);
-		gltfCharacter.position.set(0, 0, sections[0].center ? sections[0].center.z : 0);
-		parent.add(gltfCharacter);
+		const scaleBase = 2.1 / Math.max(size.x, size.y, size.z);
+		const scaleMult = characterOpt?.scaleMultiplier || 1.0;
+		const finalScale = scaleBase * scaleMult;
+		gltfCharacter.scale.setScalar(finalScale);
+		gltfCharacter.rotation.y = characterOpt?.meshYaw || 0;
+		// Recenter vertically so the feet sit on the ground
+		gltfCharacter.position.set(0, 0, 0);
+		const walkLift = (characterOpt && typeof characterOpt.walkLift === 'number') ? characterOpt.walkLift : -0.1;
+		alignMeshToGround(gltfCharacter, walkLift);
+		avatarRoot.add(gltfCharacter);
+
+		// optional static idle mesh (e.g. T-pose fix) reuses same scale & offset
+		if (gltfIdle && gltfIdle.scene){
+			gltfCharacterIdle = gltfIdle.scene;
+			gltfCharacterIdle.traverse((child) => {
+				if (child.isMesh){
+					child.castShadow = false;
+					child.receiveShadow = false;
+					if (child.material) child.material.transparent = true;
+				}
+			});
+			gltfCharacterIdle.scale.setScalar(finalScale);
+			// Many static exports come in Z-up; rotate to stand upright (override per model)
+			gltfCharacterIdle.rotation.x = (characterOpt && typeof characterOpt.idleRotationX === 'number') ? characterOpt.idleRotationX : Math.PI / 2;
+			gltfCharacterIdle.rotation.y = characterOpt?.meshYaw || 0;
+			gltfCharacterIdle.position.set(0, 0, 0);
+			const idleLift = (characterOpt && typeof characterOpt.idleLift === 'number') ? characterOpt.idleLift : 0.02;
+			alignMeshToGround(gltfCharacterIdle, idleLift);
+			gltfCharacterIdle.visible = false; // start hidden until idle
+			avatarRoot.add(gltfCharacterIdle);
+		}
 
 		if (gltf.animations && gltf.animations.length){
 			gltfMixer = new THREE.AnimationMixer(gltfCharacter);
@@ -816,7 +787,7 @@ async function createCharacterAvatar(parent){
 			// pas d'animation : on appliquera un swing procédural
 			useProceduralSwing = true;
 		}
-		avatar = gltfCharacter;
+		avatar = avatarRoot;
 	}catch(err){
 		console.warn('GLTF model not found or failed to load, using procedural avatar.', err);
 		avatar = createHumanoid();
@@ -834,6 +805,37 @@ function createParticles(scene){
 	particleGeo.setAttribute('position', new THREE.BufferAttribute(arr,3));
 	const mat = new THREE.PointsMaterial({ color:0xcff6ff, size:0.035, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending });
 	const pts = new THREE.Points(particleGeo, mat); scene.add(pts);
+}
+
+async function addMoon(scene, interactiveCollector = []){
+	const loader = new GLTFLoader();
+	try{
+		const gltf = await loader.loadAsync('./assets/moon.glb');
+		const moon = gltf.scene;
+		moonMesh = moon;
+		moon.traverse((c)=>{ 
+			if (c.isMesh){ c.castShadow = false; c.receiveShadow = false; }
+			c.userData.type = 'moon';
+		});
+		moon.userData.type = 'moon';
+		moon.scale.setScalar(15); // back to previous size
+		moon.position.set(0, 2.4, -2);
+		moon.rotation.y = Math.PI / 30;
+		scene.add(moon);
+		moon.userData = { type:'moon' };
+		interactiveCollector.push(moon);
+
+		// play moon animation if available
+		if (gltf.animations && gltf.animations.length){
+			moonMixer = new THREE.AnimationMixer(moon);
+			const action = moonMixer.clipAction(gltf.animations[0]);
+			action.clampWhenFinished = true;
+			action.play();
+		}
+		scene.add(moon);
+	}catch(err){
+		console.warn('Moon GLB missing or failed to load:', err);
+	}
 }
 
 function addGlitchOverlay(){
@@ -895,14 +897,18 @@ function setupCameraAndControls(){
 	renderer.domElement.addEventListener('contextmenu', (e)=> e.preventDefault());
 	renderer.domElement.addEventListener('pointerdown', (e)=> {
 		// clic gauche ou droit pour orienter la caméra
-		if (e.button === 0 || e.button === 2){ camDrag = true; camLastX = e.clientX; }
+		if (e.button === 0 || e.button === 2){ camDrag = true; camLastX = e.clientX; camLastY = e.clientY; }
 	});
 	window.addEventListener('pointerup', ()=>{ camDrag = false; });
 	window.addEventListener('pointermove', (e)=> {
 		if (!camDrag) return;
 		const dx = e.clientX - camLastX;
+		const dy = e.clientY - camLastY;
 		camYawTarget -= dx * 0.01;
+		// Clamp vertical pitch so camera cannot flip vertically
+		camPitchTarget = THREE.MathUtils.clamp(camPitchTarget - dy * 0.005, -0.3, 0.25);
 		camLastX = e.clientX;
+		camLastY = e.clientY;
 		e.preventDefault();
 	});
 	window.addEventListener('wheel', (e)=> {
@@ -965,9 +971,37 @@ export async function startExperience(opts = {}){
 	const interactiveObjects = [];
 	const house = new THREE.Group(); createHouseStructure(house, interactiveObjects); scene.add(house);
 
-	const humanoid = await createCharacterAvatar(house);
+	const characterSelect = document.getElementById('characterSelect');
+	const storedChoice = (typeof localStorage !== 'undefined') ? localStorage.getItem('hog.character') : null;
+	const initialChoice = (storedChoice && characterOptions[storedChoice]) ? storedChoice : (characterSelect && characterOptions[characterSelect.value] ? characterSelect.value : defaultCharacterId);
+	if (characterSelect && characterSelect.value !== initialChoice) characterSelect.value = initialChoice;
+
+	let humanoid = await createCharacterAvatar(house, characterOptions[initialChoice]);
+
+	async function swapCharacter(choice){
+		const opt = characterOptions[choice] || characterOptions[defaultCharacterId];
+		if (typeof localStorage !== 'undefined') localStorage.setItem('hog.character', choice);
+		const prevPos = humanoid ? humanoid.position.clone() : new THREE.Vector3();
+		const prevHeading = humanoid?.userData.heading || 0;
+		if (humanoid && house) house.remove(humanoid);
+		// reset GLTF state
+		gltfMixer = null;
+		gltfCharacter = null;
+		gltfCharacterIdle = null;
+		useProceduralSwing = false;
+		const newAvatar = await createCharacterAvatar(house, opt);
+		newAvatar.position.copy(prevPos);
+		newAvatar.userData.heading = prevHeading;
+		humanoid = newAvatar;
+	}
+	if (characterSelect){
+		characterSelect.addEventListener('change', (e)=> {
+			swapCharacter(e.target.value);
+		});
+	}
 
 	createParticles(scene);
+	addMoon(scene, interactiveObjects);
 	const glitchEl = addGlitchOverlay();
 
 	const guideLabel = document.getElementById('sectionLabel');
@@ -985,12 +1019,34 @@ export async function startExperience(opts = {}){
 	const hudBar = document.getElementById('hudBar');
 	const navQuick = document.getElementById('navQuick');
 	const muteToggle = document.getElementById('muteToggle');
+	const moonBubble = document.getElementById('moonBubble');
+	const moonBubbleClose = document.getElementById('moonBubbleClose');
+	const moonChatMessages = document.getElementById('moonChatMessages');
+	const moonChatForm = document.getElementById('moonChatForm');
+	const moonChatInput = document.getElementById('moonChatInput');
+	const moonApiEndpoint = (document.body && document.body.dataset && document.body.dataset.moonApi) ? document.body.dataset.moonApi : '/api/moon';
+	let moonChatTypingNode = null;
 	const navButtons = [];
 	let uiShown = false;
 	let currentChoices = [];
+	let moonBubbleVisible = false;
+
+	function toggleMoonBubble(show){
+		if (!moonBubble) return;
+		moonBubbleVisible = (show !== undefined) ? show : !moonBubbleVisible;
+		if (moonBubbleVisible){
+			moonBubble.classList.add('visible');
+			if (moonChatInput){ setTimeout(() => moonChatInput.focus(), 50); }
+		}else{
+			moonBubble.classList.remove('visible');
+		}
+	}
+	if (moonBubbleClose){
+		moonBubbleClose.addEventListener('click', ()=> toggleMoonBubble(false));
+	}
 
 	function setInfoBySlug(slug = null){
-		if (!infoTitle || !infoIntro || !infoList) return;
+		if (!infoTitle || !infoIntro || !infoList || !infoPanel) return;
 		const piece = dataPieces.find(item => item.slug === slug) || defaultInfo;
 		infoTitle.textContent = piece.title;
 		infoIntro.textContent = piece.intro;
@@ -1003,13 +1059,16 @@ export async function startExperience(opts = {}){
 		clearDynamicInfo();
 		updateActionButton(slug);
 		renderChoices(slug);
+		if (!slug && infoDynamic){
+			infoDynamic.innerHTML = '<p>Déplace-toi dans une pièce pour voir ses interactions.</p>';
+		}
 		if (infoPanel){
 			infoPanel.classList.toggle('info-panel--active', Boolean(slug));
 		}
 	}
 
-	function clearDynamicInfo(){
-		if (infoDynamic) infoDynamic.innerHTML = '<p>Active une interaction dans cette pièce pour voir un exemple.</p>';
+	function clearDynamicInfo(blankOnly = false){
+		if (infoDynamic) infoDynamic.innerHTML = blankOnly ? '' : '<p>Active une interaction dans cette pièce pour voir un exemple.</p>';
 		currentChoices = [];
 	}
 
@@ -1068,9 +1127,11 @@ function updateActionButton(slug){
 	if (action){
 		primaryActionBtn.disabled = false;
 		primaryActionBtn.textContent = action.label;
+		primaryActionBtn.style.display = '';
 	}else{
 		primaryActionBtn.disabled = true;
 		primaryActionBtn.textContent = 'Interagir';
+		primaryActionBtn.style.display = 'none';
 	}
 }
 
@@ -1188,18 +1249,115 @@ function updateActionButton(slug){
 	if (muteToggle){
 		muteToggle.addEventListener('click', ()=>{
 			voiceEnabled = !voiceEnabled;
-			muteToggle.textContent = voiceEnabled ? '🔊 Son ON' : '🔇 Son OFF';
+			muteToggle.textContent = voiceEnabled ? '🔊' : '🔇';
 			muteToggle.setAttribute('aria-pressed', voiceEnabled ? 'true' : 'false');
 			if (!voiceEnabled && window.speechSynthesis){ window.speechSynthesis.cancel(); }
+		});
+	}
+	function addMoonMessage(sender, text){
+		if (!moonChatMessages) return;
+		const div = document.createElement('div');
+		div.className = 'moon-chat__message' + (sender === 'user' ? ' moon-chat__message--user' : '');
+		div.textContent = text;
+		moonChatMessages.appendChild(div);
+		moonChatMessages.scrollTop = moonChatMessages.scrollHeight;
+	}
+	function setMoonTyping(isTyping){
+		if (!moonChatMessages) return;
+		if (isTyping){
+			if (!moonChatTypingNode){
+				const div = document.createElement('div');
+				div.className = 'moon-chat__message';
+				div.textContent = '…';
+				moonChatTypingNode = div;
+				moonChatMessages.appendChild(div);
+			}
+		}else if (moonChatTypingNode){
+			moonChatMessages.removeChild(moonChatTypingNode);
+			moonChatTypingNode = null;
+		}
+	}
+	function generateMoonReply(question = ''){
+		const q = (question || '').toLowerCase();
+		if (q.includes('qui es') || q.includes('toi') || q.includes('assistant')){
+			return "Je suis le guide locale. Je réponds hors ligne avec les infos de la Maison.";
+		}
+		if (q.includes('social') || q.includes('réseau') || q.includes('story') || q.includes('post') || q.includes('like') || q.includes('dm')){
+			return "Les signaux sociaux (likes, stories, DMs) servent à prédire humeur, opinions et influence. Réduis la géoloc des stories et segmente tes audiences.";
+		}
+		if (q.includes('achat') || q.includes('panier') || q.includes('commerce') || q.includes('abonnement') || q.includes('prix')){
+			return "Les paniers et abonnements calculent ton pouvoir d'achat et tes routines. Varie les moyens de paiement et purge l'historique d'achat pour réduire le profilage.";
+		}
+		if (q.includes('trajet') || q.includes('gps') || q.includes('locali') || q.includes('déplacement')){
+			return "Quelques jours de GPS suffisent pour trouver domicile et lieux sensibles. Coupe la géoloc en tâche de fond et utilise des profils séparés pour les trajets pros/perso.";
+		}
+		if (q.includes('santé') || q.includes('sommeil') || q.includes('humeur') || q.includes('sensibl') || q.includes('coeur') || q.includes('spo2')){
+			return "Les données santé/sommeil sont sensibles : vérifie les permissions, désactive le partage tiers et garde un export chiffré si besoin.";
+		}
+		if (q.includes('rgpd') || q.includes('droit') || q.includes('contrôle') || q.includes('export') || q.includes('effacement') || q.includes('suppression')){
+			return "Tes leviers : accès/portabilité pour récupérer, rectification pour corriger, effacement pour supprimer, opposition pour bloquer les pubs ciblées.";
+		}
+		if (q.includes('navig') || q.includes('visiter') || q.includes('guide') ){
+			return "Utilise la téléportation pour changer de pièce, ou marche avec ZQSD/flèches. Clique sur les panneaux pour déclencher les interactions.";
+		}
+		// Réponse de secours neutre quand aucune correspondance explicite n'est trouvée.
+		return "Parle-moi de réseaux, achats, trajets, santé/sensibles ou contrôle et je te répondrai.";
+	}
+	async function askMoon(question){
+		// If no endpoint is provided (or set to "local"), stay fully offline.
+		const endpoint = moonApiEndpoint || null;
+		if (!endpoint || endpoint === 'local'){
+			return generateMoonReply(question);
+		}
+		try{
+			const res = await fetch(endpoint, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question })
+			});
+			const payload = await res.json().catch(()=> ({}));
+			// Even on non-OK responses, prefer any provided "answer" to keep UX smooth.
+			if (payload && payload.answer){ return payload.answer; }
+			if (!res.ok) throw new Error(`HTTP ${res.status}`);
+			throw new Error('No answer');
+		}catch(err){
+			console.warn('Moon API fallback (réponse locale):', err?.message || err);
+			// On échec, reste silencieux côté utilisateur et répond en local.
+			return generateMoonReply(question);
+		}
+	}
+
+	if (moonChatForm){
+		moonChatForm.addEventListener('submit', async (e)=>{
+			e.preventDefault();
+			if (!moonChatInput) return;
+			const text = moonChatInput.value.trim();
+			if (!text) return;
+			addMoonMessage('user', text);
+			moonChatInput.value = '';
+			setMoonTyping(true);
+			const reply = await askMoon(text);
+			setMoonTyping(false);
+			addMoonMessage('assistant', reply);
 		});
 	}
 
 	window.addEventListener('pointermove', onPointerMove);
 	window.addEventListener('click', (e)=> onClick(e, interactiveObjects, (hit)=> {
-		if (hit && hit.userData && hit.userData.slug){
-			setInfoBySlug(hit.userData.slug);
-			const piece = dataPieces.find(p=>p.slug===hit.userData.slug);
-			if (piece && piece.intro) speakLine(piece.intro);
+		if (hit && hit.userData){
+			// climb parents to detect moon
+			let n = hit;
+			let isMoon = false;
+			while (n){
+				if (n.userData && n.userData.type === 'moon'){ isMoon = true; break; }
+				n = n.parent;
+			}
+			if (isMoon){ toggleMoonBubble(true); return; }
+			if (hit.userData.slug){
+				setInfoBySlug(hit.userData.slug);
+				const piece = dataPieces.find(p=>p.slug===hit.userData.slug);
+				if (piece && piece.intro) speakLine(piece.intro);
+			}
 		}
 	}));
 	window.addEventListener('keydown', (e)=> handleMoveKey(e, true));
@@ -1210,6 +1368,7 @@ function updateActionButton(slug){
 		const section = sections[idx] || sections[0];
 		const changed = idx !== currentSection || opts.force;
 		currentSection = idx;
+		attachZoneLabel(section, zones[idx]);
 		// isoler la pièce (visibilité)
 		zones.forEach((z, i)=>{ if (z) z.visible = (i === idx); });
 		updateGuide(idx);
@@ -1237,8 +1396,10 @@ function updateActionButton(slug){
 	clock = new THREE.Clock();
 	function animate(){ const dt = clock.getDelta(); const t = clock.getElapsedTime();
 		if (gltfMixer) gltfMixer.update(dt);
+		if (moonMixer) moonMixer.update(dt);
 
 		camYaw += (camYawTarget - camYaw) * 0.18;
+		camPitch += (camPitchTarget - camPitch) * 0.18;
 
 		const inputX = (moveState.right ? 1 : 0) - (moveState.left ? 1 : 0);
 		const inputZ = (moveState.forward ? 1 : 0) - (moveState.back ? 1 : 0);
@@ -1283,6 +1444,10 @@ function updateActionButton(slug){
 		if (allowed){
 			humanoid.position.copy(nextPos);
 			if (moving){
+				if (gltfCharacter && gltfCharacterIdle){
+					gltfCharacter.visible = true;
+					gltfCharacterIdle.visible = false;
+				}
 				const heading = Math.atan2(heroVelocity.x, heroVelocity.z);
 				const currentHeading = humanoid.userData.heading || 0;
 				const nextHeading = THREE.MathUtils.lerp(currentHeading, heading, 0.25);
@@ -1302,6 +1467,10 @@ function updateActionButton(slug){
 					}
 				}
 			} else {
+				if (gltfCharacter && gltfCharacterIdle){
+					gltfCharacter.visible = false;
+					gltfCharacterIdle.visible = true;
+				}
 				humanoid.position.y = 0;
 				if (!gltfCharacter || useProceduralSwing){
 					if (humanoid.userData.legs){ humanoid.userData.legs.forEach(l=> l.rotation.x = 0); }
@@ -1324,14 +1493,25 @@ function updateActionButton(slug){
 		desiredLook.set(humanoid.position.x, humanoid.position.y + 1.2, humanoid.position.z);
 		lookTarget.lerp(desiredLook, 0.15);
 
-		const backVec = new THREE.Vector3(Math.sin(camYaw), 0, Math.cos(camYaw)).multiplyScalar(cameraOffset.distance);
+		// Moon follows the avatar as a small companion
+		if (moonMesh){
+			moonTarget.copy(humanoid.position).add(moonFollowOffset);
+			moonMesh.position.lerp(moonTarget, 0.1);
+			moonMesh.lookAt(humanoid.position.x, humanoid.position.y + 1.4, humanoid.position.z);
+		}
+
 		const camTarget = new THREE.Vector3(
 			humanoid.position.x,
-			humanoid.position.y + 1.2,
+			humanoid.position.y + 0.2,
 			humanoid.position.z
 		);
-		const camPos = camTarget.clone().add(backVec);
-		camPos.y = humanoid.position.y + cameraOffset.height;
+		const backVecPitch = new THREE.Vector3(
+			Math.sin(camYaw) * Math.cos(camPitch),
+			Math.sin(camPitch),
+			Math.cos(camYaw) * Math.cos(camPitch)
+		).multiplyScalar(cameraOffset.distance);
+		const camPos = camTarget.clone().add(backVecPitch);
+		camPos.y += cameraOffset.height;
 		camera.position.lerp(camPos, cameraOffset.lag);
 		camera.lookAt(camTarget);
 

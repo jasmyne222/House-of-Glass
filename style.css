@@ -227,6 +227,15 @@ canvas{ display:block; position:fixed; inset:0; z-index:1; }
   align-items:center;
   gap:12px;
 }
+.hud-bar__select{
+  padding:6px 8px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.12);
+  color:#f5fbff;
+  font-size:13px;
+  outline:none;
+}
 .hud-bar__nav{
   display:flex;
   flex-wrap:wrap;
@@ -240,6 +249,91 @@ canvas{ display:block; position:fixed; inset:0; z-index:1; }
   color:#132438;
   cursor:pointer;
   box-shadow: 0 6px 14px rgba(5,10,20,0.2);
+}
+
+.info-bubble{
+  position:fixed;
+  right:20px;
+  bottom:120px;
+  max-width:320px;
+  padding:14px 14px 12px 14px;
+  border-radius:14px;
+  background: rgba(8,20,32,0.9);
+  color:#e8f7ff;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px);
+  z-index:24;
+  display:none;
+}
+.info-bubble.visible{ display:block; }
+.info-bubble h3{ margin:0 0 6px 0; font-size:16px; }
+.info-bubble p{ margin:4px 0; font-size:13px; color:#d7ecff; line-height:1.35; }
+.info-bubble__hint{ font-size:12px; color:#9cc8e2; }
+.info-bubble__close{
+  position:absolute;
+  top:6px;
+  right:8px;
+  border:none;
+  background:transparent;
+  color:#e8f7ff;
+  font-size:16px;
+  cursor:pointer;
+}
+
+.moon-chat{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:4px;
+}
+.moon-chat__messages{
+  max-height:240px;
+  overflow:auto;
+  padding:10px;
+  border-radius:10px;
+  background: rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.moon-chat__message{
+  padding:8px 10px;
+  border-radius:10px;
+  line-height:1.35;
+  font-size:13px;
+  background: rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  color:#e8f7ff;
+}
+.moon-chat__message--user{
+  align-self:flex-end;
+  background: linear-gradient(90deg,#b9e5ff,#e9d6ff);
+  color:#0d2032;
+  border: none;
+}
+.moon-chat__form{
+  display:flex;
+  gap:6px;
+}
+.moon-chat__form input{
+  flex:1;
+  padding:9px 10px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color:#e8f7ff;
+}
+.moon-chat__form input::placeholder{ color: rgba(232,247,255,0.7); }
+.moon-chat__form button{
+  padding:9px 12px;
+  border:none;
+  border-radius:10px;
+  background: linear-gradient(120deg,#b9e5ff,#e9d6ff);
+  color:#0d2032;
+  cursor:pointer;
+  font-weight:600;
 }
 
 @media (max-width:600px){

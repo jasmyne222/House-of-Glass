@@ -16,7 +16,7 @@
     }
   </script>
 </head>
-<body>
+<body data-moon-api="">
   <div class="intro" id="intro">
     <div class="intro-card">
       <h1 class="title">The House of Glass</h1>
@@ -30,6 +30,21 @@
 
   <div id="hud" class="hud">
     <div id="narration" class="narration" aria-hidden="true"></div>
+  </div>
+
+  <div class="info-bubble" id="moonBubble" aria-live="polite">
+    <button class="info-bubble__close" id="moonBubbleClose" aria-label="Fermer">×</button>
+    <h3>Assistant</h3>
+    <p class="info-bubble__hint">Pose ta question sur tes données ou la Maison.</p>
+    <div class="moon-chat">
+      <div class="moon-chat__messages" id="moonChatMessages" role="log" aria-live="polite">
+        <div class="moon-chat__message moon-chat__message--assistant">Salut, je suis ton compagnon. Demande-moi comment les données révèlent ton profil ou comment naviguer ici.</div>
+      </div>
+      <form class="moon-chat__form" id="moonChatForm">
+        <input id="moonChatInput" name="message" type="text" placeholder="Ex : Que déduis-tu d’un trajet GPS ?" autocomplete="off" />
+        <button type="submit">Envoyer</button>
+      </form>
+    </div>
   </div>
 
   <div class="info-panel" id="infoPanel" aria-live="polite">
@@ -56,7 +71,11 @@
     <div class="hud-bar__controls">Glisser souris = tourner | Molette = zoom | ZQSD/Flèches = marcher | Clic = interagir</div>
     <div class="hud-bar__actions">
       <div class="hud-bar__nav" id="navQuick"></div>
-      <button class="hud-bar__btn" id="muteToggle" aria-pressed="false">🔇 Son OFF</button>
+      <select id="characterSelect" class="hud-bar__select" aria-label="Personnage">
+        <option value="loup">Loup</option>
+        <option value="cameraman">Cameraman</option>
+      </select>
+      <button class="hud-bar__btn" id="muteToggle" aria-pressed="false">🔇</button>
     </div>
   </div>
 
