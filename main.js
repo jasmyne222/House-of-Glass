@@ -15,6 +15,7 @@ import {
 	dataPieces,
 	roomActions,
 	roomChoices,
+	roomScenarios,
 	defaultInfo,
 	characterOptions,
 	moveSpeeds,
@@ -465,7 +466,6 @@ export async function startExperience(opts = {}) {
 	const infoIntro = document.getElementById('infoIntro');
 	const infoList = document.getElementById('infoList');
 	const infoDynamic = document.getElementById('infoDynamic');
-	const primaryActionBtn = document.getElementById('primaryAction');
 	const teleportGrid = document.getElementById('teleportGrid');
 	const storyTitleEl = document.getElementById('storyTitle');
 	const storyBodyEl = document.getElementById('storyBody');
@@ -489,11 +489,10 @@ export async function startExperience(opts = {}) {
 		infoIntro,
 		infoList,
 		infoDynamic,
-		primaryActionBtn,
 		dataPieces,
 		defaultInfo,
-		roomActions,
 		roomChoices,
+		roomScenarios,
 		speakLine,
 		gameState
 	});
@@ -593,18 +592,6 @@ export async function startExperience(opts = {}) {
 		storyCtaEl.addEventListener('click', () => {
 			const target = Number(storyCtaEl.dataset.target);
 			if (!Number.isNaN(target)) goTo(target);
-		});
-	}
-	if (primaryActionBtn) {
-		primaryActionBtn.addEventListener('click', () => {
-			const section = sections[currentSection] || sections[0];
-			if (!section || !section.slug) return;
-			const action = roomActions[section.slug];
-			if (action && typeof action.handler === 'function') {
-				const result = action.handler();
-				panels.renderDynamicResult(result);
-				if (result && result.lines) speakLine(result.lines.join('. '));
-			}
 		});
 	}
 

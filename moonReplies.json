@@ -2,32 +2,40 @@
   "entries": [
     {
       "triggers": ["qui es", "toi", "assistant"],
-      "response": "Je suis le guide de la Maison : je réponds avec les règles de l'expérience."
+      "response": "Je suis Moon, ton guide dans la Maison de Verre. Je t'aide à comprendre comment tes traces numériques se combinent pour dresser un profil de toi, et comment te protéger."
     },
     {
-      "triggers": ["social", "réseau", "story", "post", "like", "dm"],
-      "response": "Les signaux sociaux (likes, stories, DMs) servent à prédire humeur, opinions et influence. Réduis la géoloc et segmente tes audiences."
+      "triggers": ["achat", "panier", "commerce", "abonnement", "prix", "dynamic pricing"],
+      "response": "Le Dynamic Pricing utilise ton profil (appareil, historique d'achats, comportement) pour ajuster les prix. Si tu achètes en urgence ou sur MacBook, tu paises 15-30% plus cher. Protection : efface régulièrement tes cookies, utilise le mode privé, varie tes appareils et moyens de paiement."
     },
     {
-      "triggers": ["achat", "panier", "commerce", "abonnement", "prix"],
-      "response": "Les paniers et abonnements calculent ton pouvoir d'achat et tes routines. Varie les moyens de paiement et purge l'historique d'achat."
+      "triggers": ["géoloc", "localisation", "gps", "strava", "trajet"],
+      "response": "Quelques jours de GPS suffisent pour retrouver ton domicile et tes lieux sensibles. C'est admissible aux Prud'hommes. Protection : désactive la géolocalisation en arrière-plan, revois les permissions des apps, utilise des profils séparés (pro/perso)."
     },
     {
-      "triggers": ["trajet", "gps", "locali", "déplacement"],
-      "response": "Quelques jours de GPS suffisent pour trouver domicile et lieux sensibles. Coupe la géoloc en tâche de fond et sépare profils pro/perso."
+      "triggers": ["pub", "publicité", "tracking", "traceur", "annonce"],
+      "response": "Tes recherches privées (grossesse, santé, IST) sont révélées par les pubs ciblées en temps réel. Protection : utilise Swisscows ou DuckDuckGo, limite les pubs ciblées dans Google/Meta, installe uBlock Origin ou Privacy Badger."
     },
     {
-      "triggers": ["santé", "sommeil", "humeur", "sensibl", "coeur", "spo2"],
-      "response": "Les données santé/sommeil sont sensibles : vérifie les permissions, désactive le partage tiers et conserve un export chiffré seulement si besoin."
+      "triggers": ["social", "réseau", "réseaux", "algorithm", "radicali", "feed"],
+      "response": "L'algorithme amplifie le contenu inquiétant (peur, colère, conspiracy) parce que c'est plus rentable. Tu peux te radicaliser sans t'en rendre compte. Protection : désactive l'historique de navigation, diversifie tes sources (presse, podcasts, livres), prends des digital detox."
     },
     {
-      "triggers": ["rgpd", "droit", "contrôle", "export", "effacement", "suppression"],
-      "response": "Tes leviers : accès/portabilité pour récupérer, rectification pour corriger, effacement pour supprimer, opposition pour bloquer la pub ciblée."
+      "triggers": ["réputation", "archives", "passé", "embauch", "candidature"],
+      "response": "Ton passé numérique te suit à jamais (archives web, Google Images). Un recruteur voit une vieille photo et tu n'es jamais appelée. Protection : demande ton droit d'accès RGPD (edoeb.admin.ch), teste haveibeenpwned.com, demande le déréférençage aux archives."
     },
     {
-      "triggers": ["navig", "visiter", "guide"],
-      "response": "Utilise la téléportation pour changer de pièce, ou marche avec ZQSD/flèches. Clique sur les panneaux pour déclencher les interactions."
+      "triggers": ["rgpd", "droit", "accès", "effacement", "contrôle"],
+      "response": "Tes leviers RGPD : accès/portabilité (récupère tes données), rectification (corrige-les), effacement (supprime-les), opposition (bloque les pubs ciblées). Tu as aussi le droit de demander une copie et de connaître ce qui circule."
+    },
+    {
+      "triggers": ["protection", "se protéger", "conseil", "action"],
+      "response": "Les protections concrètes : limiter les traces (cookies, historique), utiliser des outils privés (Swisscows, navigateurs sécurisés), revoir tes permissions et paramètres, exercer tes droits RGPD. Chaque pièce propose des actions spécifiques."
+    },
+    {
+      "triggers": ["navig", "visiter", "guide", "déplacement", "bouton"],
+      "response": "Utilise la téléportation pour sauter entre pièces, ou marche avec ZQSD/flèches. Clique sur les panneaux pour voir les scénarios. Chaque pièce raconte une histoire vraie et propose des protections."
     }
   ],
-  "default": "Parle-moi de réseaux, achats, trajets, santé/sensibles ou contrôle et je te répondrai."
+  "default": "Pose-moi une question sur les achats, la géolocalisation, la publicité ciblée, les réseaux, ton passé numérique, tes droits RGPD, ou comment te protéger. Je t'aide à comprendre."
 }

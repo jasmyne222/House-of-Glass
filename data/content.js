@@ -4,34 +4,42 @@ export const moonRepliesDefault = {
 	entries: [
 		{
 			triggers: ["qui es", "toi", "assistant"],
-			response: "Je suis le guide de la Maison : je réponds avec les règles de l'expérience."
+			response: "Je suis Moon, ton guide dans la Maison de Verre. Je t'aide à comprendre comment tes traces numériques se combinent pour dresser un profil de toi, et comment te protéger."
 		},
 		{
-			triggers: ["social", "réseau", "story", "post", "like", "dm"],
-			response: "Les signaux sociaux (likes, stories, DMs) servent à prédire humeur, opinions et influence. Réduis la géoloc et segmente tes audiences."
+			triggers: ["achat", "panier", "commerce", "abonnement", "prix", "dynamic pricing"],
+			response: "Le Dynamic Pricing utilise ton profil (appareil, historique d'achats, comportement) pour ajuster les prix. Si tu achètes en urgence ou sur MacBook, tu paies 15-30% plus cher. Protection : efface régulièrement tes cookies, utilise le mode privé, varie tes appareils et moyens de paiement."
 		},
 		{
-			triggers: ["achat", "panier", "commerce", "abonnement", "prix"],
-			response: "Les paniers et abonnements calculent ton pouvoir d'achat et tes routines. Varie les moyens de paiement et purge l'historique d'achat."
+			triggers: ["géoloc", "localisation", "gps", "strava", "trajet"],
+			response: "Quelques jours de GPS suffisent pour retrouver ton domicile et tes lieux sensibles. C'est admissible au tribunal du travail. Protection : désactive la géolocalisation en arrière-plan, revois les permissions des apps, utilise des profils séparés (pro/perso)."
 		},
 		{
-			triggers: ["trajet", "gps", "locali", "déplacement"],
-			response: "Quelques jours de GPS suffisent pour trouver domicile et lieux sensibles. Coupe la géoloc en tâche de fond et sépare profils pro/perso."
+			triggers: ["pub", "publicité", "tracking", "traceur", "annonce"],
+			response: "Tes recherches privées (grossesse, santé, IST) sont révélées par les pubs ciblées en temps réel. Protection : utilise Swisscows ou DuckDuckGo, limite les pubs ciblées dans Google/Meta, installe uBlock Origin ou Privacy Badger."
 		},
 		{
-			triggers: ["santé", "sommeil", "humeur", "sensibl", "coeur", "spo2"],
-			response: "Les données santé/sommeil sont sensibles : vérifie les permissions, désactive le partage tiers et conserve un export chiffré seulement si besoin."
+			triggers: ["social", "réseau", "réseaux", "algorithm", "radicali", "feed"],
+			response: "L'algorithme amplifie le contenu inquiétant (peur, colère, conspiracy) parce que c'est plus rentable. Tu peux te radicaliser sans t'en rendre compte. Protection : désactive l'historique de navigation, diversifie tes sources (presse, podcasts, livres), prends des digital detox."
 		},
 		{
-			triggers: ["rgpd", "droit", "contrôle", "export", "effacement", "suppression"],
-			response: "Tes leviers : accès/portabilité pour récupérer, rectification pour corriger, effacement pour supprimer, opposition pour bloquer la pub ciblée."
+			triggers: ["réputation", "archives", "passé", "embauch", "candidature"],
+			response: "Ton passé numérique te suit à jamais (archives web, Google Images). Un recruteur voit une vieille photo et tu n'es jamais appelée. Protection : demande ton droit d'accès RGPD (edoeb.admin.ch), teste haveibeenpwned.com, demande le déréférençage aux archives."
 		},
 		{
-			triggers: ["navig", "visiter", "guide"],
-			response: "Utilise la téléportation pour changer de pièce, ou marche avec ZQSD/flèches. Clique sur les panneaux pour déclencher les interactions."
+			triggers: ["rgpd", "droit", "accès", "effacement", "contrôle"],
+			response: "Tes leviers RGPD : accès/portabilité (récupère tes données), rectification (corrige-les), effacement (supprime-les), opposition (bloque les pubs ciblées). Tu as aussi le droit de demander une copie et de connaître ce qui circule."
+		},
+		{
+			triggers: ["protection", "se protéger", "conseil", "action"],
+			response: "Les protections concrètes : limiter les traces (cookies, historique), utiliser des outils privés (Swisscows, navigateurs sécurisés), revoir tes permissions et paramètres, exercer tes droits RGPD. Chaque pièce propose des actions spécifiques."
+		},
+		{
+			triggers: ["navig", "visiter", "guide", "déplacement", "bouton"],
+			response: "Utilise la téléportation pour sauter entre pièces, ou marche avec ZQSD/flèches. Clique sur les panneaux pour voir les scénarios. Chaque pièce raconte une histoire vraie et propose des protections."
 		}
 	],
-	default: "Parle-moi de réseaux, achats, trajets, santé/sensibles ou contrôle et je te répondrai."
+	default: "Pose-moi une question sur les achats, la géolocalisation, la publicité ciblée, les réseaux, ton passé numérique, tes droits RGPD, ou comment te protéger. Je t'aide à comprendre."
 };
 
 export const sections = [
@@ -44,77 +52,77 @@ export const sections = [
 		size: { w: 4.6, h: 4.6 },
 		story: {
 			title: "Hall d'entrée",
-			body: "Bienvenue dans la House of Glass. Chaque pièce correspond à une famille de données (réseaux, achats, déplacements, données sensibles, contrôle). À toi d’explorer et de voir ce qu’on peut déduire de toi.",
-			cta: "Entrer dans le salon des réseaux",
+			body: "Bienvenue dans la House of Glass. Chaque pièce correspond à une famille de données (réseaux, achats, déplacements, données sensibles, contrôle). À toi d'explorer et de voir ce qu'on peut déduire de toi.",
+			cta: "Entrer dans la cuisine des achats",
 			target: 1
 		}
 	},
 	{
 		id: 'social',
-		label: "Salon des Réseaux",
-		copy: "Publier, liker, scroller : ces signaux suffisent à composer un double social très détaillé.",
+		label: "Cuisine des Achats",
+		copy: "Tes achats en ligne et ton profil permettent aux algorithmes de te cibler avec des prix différents selon ta willingness-to-pay estimée.",
 		slug: 'social',
 		center: { x: -4.4, z: 0 },
 		size: { w: 4.6, h: 4.6 },
 		story: {
-			title: "Salon des Réseaux",
-			body: "Ici tu testes des posts fictifs (stories, débats, contenus lifestyle) et tu vois comment ils alimentent une fiche de profil marketing.",
-			cta: "Passer à la cuisine des achats",
+			title: "Cuisine des Achats",
+			body: "Découvre comment le Dynamic Pricing fonctionne : même produit, prix différents selon qui tu es.",
+			cta: "Passer à la chambre des données sensibles",
 			target: 2
 		}
 	},
 	{
 		id: 'commerce',
-		label: "Cuisine des Achats",
-		copy: "Chaque panier ou abonnement révèle budget, priorités et habitudes de consommation.",
+		label: "Chambre des Données sensibles",
+		copy: "Ta géolocalisation et tes traces numériques publiques peuvent être utilisées pour prouver un mensonge, même au tribunal du travail.",
 		slug: 'commerce',
 		center: { x: 4.4, z: 0 },
 		size: { w: 4.6, h: 4.6 },
 		story: {
-			title: "Cuisine des Achats",
-			body: "Compose un panier fictif (bio, gaming, voyages, soins) et observe ce qu’il suggère sur ton niveau de vie et tes routines.",
-			cta: "Explorer le couloir des déplacements",
+			title: "Chambre des Données sensibles",
+			body: "Explore comment GPS et traces numériques peuvent te trahir au travail.",
+			cta: "Aller au couloir des traces",
 			target: 3
 		}
 	},
 	{
 		id: 'mobility',
-		label: "Couloir des Déplacements",
-		copy: "La géolocalisation suffit à retrouver domicile, trajets et lieux sensibles que tu fréquentes.",
+		label: "Couloir des Traces",
+		copy: "Tes recherches privées sont observées par les algorithmes publicitaires, et le secret est révélé sans que tu le saches.",
 		slug: 'mobility',
 		center: { x: -4.4, z: -4.4 },
 		size: { w: 4.6, h: 4.6 },
 		story: {
-			title: "Couloir des Déplacements",
-			body: "Choisis un trajet type (études, travail, famille) et regarde les hypothèses qu’un système peut en tirer sur ton quotidien.",
-			cta: "Entrer dans la chambre des données sensibles",
+			title: "Couloir des Traces",
+			body: "Découvre comment tes secrets sont révélés par les annonces ciblées.",
+			cta: "Entrer dans le salon des réseaux",
 			target: 4
 		}
 	},
 	{
 		id: 'sensibles',
-		label: "Chambre des Données sensibles",
-		copy: "Santé, sommeil, messages privés : ces signaux sont particulièrement protégés, mais restent exploitables si tu les partages.",
+		label: "Salon des Réseaux",
+		copy: "Cliquer une fois sur du contenu anxiogène suffit pour déclencher une cascade d'algorithmes qui te radicalisent progressivement.",
 		slug: 'sensibles',
 		center: { x: 4.4, z: -4.4 },
 		size: { w: 4.6, h: 4.6 },
 		story: {
-			title: "Chambre des Données sensibles",
-			body: "Ici tu actives ou coupes des permissions fictives (sommeil, humeur, capteurs santé, messageries) et tu vois l’impact potentiel sur ton profil.",
-			cta: "Aller au bureau de contrôle",
+			title: "Salon des Réseaux",
+			body: "Explore comment la radicalisation algorithmique fonctionne sans que tu t'en rendes compte.",
+			cta: "Aller au grenier des souvenirs",
 			target: 5
 		}
 	},
 	{
 		id: 'control',
-		label: "Bureau de contrôle",
-		copy: "Synthèse : tu vois le profil reconstruit à partir de tes choix et tu découvres les leviers pour reprendre la main.",
+		label: "Grenier des Souvenirs",
+		copy: "Ton passé numérique te suit à jamais. Les archives web et les images conservées ferment des portes sans que tu le saches.",
 		slug: 'control',
 		center: { x: 0, z: -4.4 },
 		size: { w: 4.6, h: 4.6 },
 		story: {
-			title: "Bureau de contrôle",
-			body: "Dernière pièce : on assemble ce que tes traces laissent deviner et on le relie à des droits concrets (accès, effacement, opposition) et à des réglages simples.",
+			title: "Grenier des Souvenirs",
+			body: "Découvre comment ton passé numérique détermine ton futur.",
 			cta: null,
 			target: null
 		}
@@ -155,57 +163,181 @@ export const roomAccent = {
 export const dataPieces = [
 	{
 		slug: "social",
-		title: "Salon des Réseaux",
-		intro: "Stories, likes, commentaires et temps de visionnage peuvent être utilisés pour dresser un profil social détaillé.",
+		title: "Cuisine des Achats",
+		intro: "Tes achats en ligne et ton profil permettent aux algorithmes de te cibler avec des prix différents selon ta willingness-to-pay estimée.",
 		insights: [
-			"Les plateformes observent le type de contenus que tu vois, postes ou likes pour en déduire tes centres d’intérêt et ton style de vie.",
-			"Les horaires d’activité et la fréquence des échanges aident à estimer ton âge probable, ton niveau d’engagement et ton réseau social."
+			"Le Dynamic Pricing (tarification dynamique) ajuste les prix en temps réel selon le profil de l'utilisateur (datanews.levif.be).",
 		],
 		color: "#ffb3ec"
 	},
 	{
 		slug: "commerce",
-		title: "Cuisine des Achats",
-		intro: "Tes achats et abonnements en ligne laissent une empreinte qui peut servir au ciblage commercial.",
+		title: "Chambre des Données sensibles",
+		intro: "Ta géolocalisation et tes traces numériques publiques peuvent être utilisées pour prouver un mensonge, même au tribunal du travail.",
 		insights: [
-			"Les tickets, paniers et abonnements indiquent le budget moyen, la fréquence d’achat et les catégories de produits privilégiées.",
-			"Ces signaux peuvent être utilisés pour ajuster les prix, prioriser certaines promotions ou recommander des produits similaires."
+			"Les données de localisation (GPS, Strava, géotags) sont admissibles comme preuve légale au tribunal du travail (village-justice.com).",
+			"Une seule contradition entre la déclaration et la localisation réelle suffit pour licenciement pour fausse déclaration."
 		],
 		color: "#ffd68f"
 	},
 	{
 		slug: "mobility",
-		title: "Couloir des Déplacements",
-		intro: "La géolocalisation permet de reconstituer des trajets et des lieux-clés de ton quotidien.",
+		title: "Couloir des Traces",
+		intro: "Tes recherches privées sont observées par les algorithmes publicitaires, et le secret est révélé sans que tu le saches.",
 		insights: [
-			"Des positions régulières à certaines heures suffisent souvent à identifier un domicile probable ou un lieu de travail/études.",
-			"La fréquence de passage dans certains lieux peut suggérer des habitudes (sport, sorties, vie de famille, déplacements longue distance)."
+			"Les annonces ciblées révèlent les secrets personnels (santé, grossesse, IST) en temps réel (Mozilla Privacy Not Included).",
+			"Le cross-référencement entre recherches + profil + âge crée des profils de risque ultra-précis pour le ciblage publicitaire."
 		],
 		color: "#aee6ff"
 	},
 	{
 		slug: "sensibles",
-		title: "Chambre des Données sensibles",
-		intro: "Certaines informations sont considérées comme sensibles par le droit européen (santé, opinions, vie intime).",
+		title: "Salon des Réseaux",
+		intro: "Cliquer une fois sur du contenu anxiogène suffit pour déclencher une cascade d'algorithmes qui te radicalisent progressivement.",
 		insights: [
-			"Des données comme le sommeil, la fréquence des messages ou les capteurs santé peuvent être très personnelles si elles sont croisées avec d’autres sources.",
-			"Leur utilisation est encadrée : selon le contexte, un traitement abusif peut avoir des conséquences sur l’assurance, la réputation ou des opportunités futures."
+			"Les algorithmes amplifient le contenu émotionnel (peur, colère, conspiracy) car ils génèrent plus d'engagement (swisspeace.ch).",
 		],
 		color: "#d0c5ff"
 	},
 	{
 		slug: "control",
-		title: "Bureau de Contrôle",
-		intro: "Cette pièce rassemble ce que tes choix laissent deviner et te montre des leviers concrets de protection.",
+		title: "Grenier des Souvenirs",
+		intro: "Ton passé numérique te suit à jamais. Les archives web et les images conservées ferment des portes sans que tu le saches.",
 		insights: [
-			"Les principaux droits prévus par le RGPD incluent l’accès, la rectification, l’effacement, la portabilité et le droit d’opposition.",
-			"Des actions simples comme limiter certaines permissions, revoir les paramètres de pub ou nettoyer l’historique réduisent déjà ton exposition."
+			"Aucune donnée n'est vraiment supprimée : archives (Wayback Machine), Google Images, anciens comptes restent accessibles (forbes.com).",
 		],
 		color: "#f1ffb5"
 	}
 ];
 
+// Unique scenarios for each room (new structure - no user choices)
+export const roomScenarios = {
+	social: {
+		neutral: {
+			title: "Vous faites vos achats en ligne",
+			description: "C'est un dimanche matin. Vous êtes sur votre MacBook Pro, vous regardez des billets d'avion pour un départ urgent (dans 3 jours). Vous trouvez un bon prix : 450 CHF. Vous consultez aussi une montre connectée haut de gamme. Tout semble normal, non ?"
+		},
+		reality: {
+			title: "Mais l'algorithme sait qui vous êtes",
+			subtitle: "Ce qui se passe vraiment en arrière-plan",
+			lines: [
+				"L'algorithme détecte : MacBook Pro + achat urgent + catégories premium.",
+				"Il calcule votre 'willingness-to-pay' (capacité/volonté de payer).",
+				"Résultat : le même billet s'affiche à 517 CHF pour vous (+15%), mais à 450 CHF pour votre voisin sur PC.",
+				"C'est le Dynamic Pricing. Vous payez plus parce que le système sait que vous pouvez payer plus."
+			]
+		},
+		impact: "Surcoût estimé : 15-30% sur les achats urgents.",
+		source: "https://datanews.levif.be — Dynamic pricing selon votre profil",
+		protections: [
+			"Effacez régulièrement vos cookies et historique dans paramètres > Confidentialité > Effacer les données",
+			"Utilisez la navigation privée/incognito pour chaque achat sensible",
+			"Alternez entre navigateurs, appareils, et moyens de paiement pour éviter la profilage"
+		]
+	},
+	commerce: {
+		neutral: {
+			title: "Vous postez une story 'au lit'",
+			description: "Lundi matin. Vous êtes malade, arrêt maladie. Vous postez une story avec le texte 'trop malade pour le bureau'. Votre géolocalisation est activée. Vos collègues peuvent vous voir sur la carte (fonction 'Amis à proximité'). Vous vous reposez, c'est normal."
+		},
+		reality: {
+			title: "Mais votre empreinte numérique raconte une autre histoire",
+			subtitle: "Les preuves numériques contre vous",
+			lines: [
+				"Pendant que vous postez 'au lit', votre GPS vous localise au restaurant à 15km de chez vous.",
+				"Un collègue voit l'alerte et vérifie : vous n'êtes clairement pas malade.",
+				"Strava (votre app fitness) affiche un entraînement de ce matin. Le tribunal du travail admet ce type de preuve.",
+				"Vous êtes renvoyée pour mensonge. Pas même convoquée : juste licenciée."
+			]
+		},
+		impact: "Licenciement pour fausse déclaration. Les données numériques sont admises au tribunal du travail.",
+		source: "https://village-justice.com — Géolocalisation et responsabilité",
+		protections: [
+			"Désactivez la géolocalisation en arrière-plan : Paramètres > Applications > Permissions > Localisation",
+			"Revoyez les permissions d'accès pour chaque app et limitez à 'En utilisant l'app'",
+			"Utilisez des profils séparés (professionnel/personnel) sur chaque réseau social"
+		]
+	},
+	mobility: {
+		neutral: {
+			title: "Vous ouvrez votre navigateur",
+			description: "Vous êtes enceinte, vous avez un doute. Vous faites des recherches discrètes : 'test de grossesse', 'premiers symptômes', 'cliniques spécialisées'. C'est personnel, vous ne l'avez dit à personne. Votre mère est à côté de vous sur le canapé."
+		},
+		reality: {
+			title: "Quelques secondes plus tard...",
+			subtitle: "Le secret est révélé sans que vous le sachiez",
+			lines: [
+				"Une bannière publicitaire apparaît : 'Test de grossesse en promo'. Votre mère la voit.",
+				"L'algorithme a cross-réferencé : vos recherches + votre âge + votre profil d'achat = acheteur potentiel.",
+				"Il ne cherchait pas à vous nuire, il voulait juste vous vendre un produit.",
+				"Mais votre secret de 2h a été révélé publiquement par le marketing en ligne."
+			]
+		},
+		impact: "Perte d'intimité. Révélation de secrets personnels (santé, IST, grossesse) via les annonces ciblées.",
+		source: "https://foundation.mozilla.org/en/privacynotincluded/ — Online tracking and targeted ads",
+		protections: [
+			"Utilisez Swisscows ou DuckDuckGo pour les recherches sensibles — aucun suivi, aucun historique",
+			"Limitez les publicités ciblées dans Google Ads Settings et vos comptes Meta/Instagram",
+			"Installez un bloqueur de traceurs : uBlock Origin, Privacy Badger (EFF)"
+		]
+	},
+	sensibles: {
+		neutral: {
+			title: "Vous scrollez sur les réseaux",
+			description: "Vous voyez un article anxiogène : une crise économique, une catastrophe naturelle, une polémique politique. Vous cliquez pour en savoir plus. C'est juste de la curiosité."
+		},
+		reality: {
+			title: "Mais l'algorithme vous piège",
+			subtitle: "La radicalisation commence",
+			lines: [
+				"L'algorithme a enregistré : vous aimez le contenu inquiétant. Il vous en propose plus.",
+				"Demain : des contenus plus extrêmes, plus polarisés, plus colériques.",
+				"Dans une semaine : votre feed n'est que contenu rage, peur, conspiration.",
+				"Vous perdez vos amis modérés, vous radicalisez progressivement, sans vous en rendre compte. La peur et la colère font plus de clics que le bonheur."
+			]
+		},
+		impact: "Radicalisation algorithmique. Dépression, perte d'amis, extrémisme, sans le réaliser.",
+		source: "https://swisspeace.ch — Réseaux sociaux et polarisation",
+		protections: [
+			"Désactivez les recommandations algorithmiques : coupez l'historique de navigation",
+			"Diversifiez vos sources : journaux, podcasts, livres, discussions en personne",
+			"Prenez des pauses régulières sur les réseaux (digital detox hebdomadaire)"
+		]
+	},
+	control: {
+		neutral: {
+			title: "Vous postulez pour un CDI",
+			description: "C'est le poste de vos rêves. Vous êtes confiante : vous avez un bon CV, une belle lettre de motivation. Le recruteur vous dit 'On vous recontactera'. Quelques jours passent sans nouvelles."
+		},
+		reality: {
+			title: "Vous ne saurez jamais pourquoi",
+			subtitle: "Une vieille photo vous bloque",
+			lines: [
+				"Il y a 8 ans, vous aviez 19 ans. Une photo de soirée un peu 'limite'. Elle était censée disparaître.",
+				"Mais elle existe encore sur un site d'archivage, un vieux compte Tumblr mal fermé, ou Google Images.",
+				"Le recruteur tape votre nom. La photo ressort. Il ferme le mail sans lire votre CV.",
+				"Vous ne serez jamais embauchée. Vous ne saurez jamais pourquoi. Votre réputation numérique vous précède et vous ferme des portes."
+			]
+		},
+		impact: "Bloquée pour des opportunités sans le savoir. Votre passé numérique détermine votre futur.",
+		source: "https://forbes.com — Online reputation affects hiring and referrals",
+		protections: [
+			"Vérifiez vos données : demandez votre droit d'accès RGPD auprès de Google, Meta, tout service (edoeb.admin.ch)",
+			"Surveillez les fuites : testez votre email sur haveibeenpwned.com",
+			"Supprimez votre passé : contactez les archives web pour déréférençage, demandez suppression Google Images"
+		]
+	}
+};
+
 export const roomChoices = {
+	social: [],
+	commerce: [],
+	mobility: [],
+	sensibles: [],
+	control: []
+};
+
+export const roomChoices_OLD = {
 	social: [
 		{
 			label: "Poster des stories géolocalisées avec tes amis",
