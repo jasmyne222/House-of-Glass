@@ -512,3 +512,95 @@ canvas{ display:block; position:fixed; inset:0; z-index:1; }
     bottom:12px;
   }
 }
+
+/* Tutorial Styles */
+.tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.tutorial-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: linear-gradient(135deg, rgba(20, 50, 100, 0.95), rgba(15, 35, 70, 0.95));
+  border: 1px solid rgba(100, 180, 255, 0.3);
+  border-radius: 20px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  z-index: 51;
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.tutorial-modal h2 {
+  margin: 0 0 16px 0;
+  font-size: 28px;
+  color: #fff;
+  text-align: center;
+}
+
+.tutorial-modal p {
+  margin: 0 0 24px 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #d7ecff;
+  text-align: center;
+}
+
+.tutorial-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.tutorial-btn-next {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, rgba(74, 150, 255, 0.9), rgba(60, 130, 255, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tutorial-btn-next:hover {
+  background: linear-gradient(135deg, rgba(90, 170, 255, 0.95), rgba(75, 150, 255, 0.9));
+  transform: translateY(-2px);
+}
+
+.tutorial-btn-skip {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  color: #9cc8e2;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tutorial-btn-skip:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d7ecff;
+}

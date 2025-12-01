@@ -306,6 +306,70 @@ function buildTeleport(teleportGrid, teleportTo) {
 	});
 }
 
+// Tutorial System
+function showTutorial() {
+	const tutorialSteps = [
+		{
+			title: 'Bienvenue au Hall !',
+			text: 'Tu peux découvrir les pièces de 3 façons différentes :'
+		},
+		{
+			title: 'Méthode 1 : Les flèches du clavier',
+			text: 'Utilise les flèches pour te déplacer et explorer les pièces.'
+		},
+		{
+			title: 'Méthode 2 : Cliquer sur les pièces',
+			text: 'Clique directement sur une pièce dans la maison pour la visiter.'
+		},
+		{
+			title: 'Méthode 3 : Le dashboard',
+			text: 'Utilise les boutons en bas de l\'écran pour aller directement à une pièce.'
+		},
+		{
+			title: 'Besoin d\'aide ?',
+			text: 'Moon est ton assistant - celui qui vole à côté de toi. Clique dessus pour poser des questions sur tes données.'
+		}
+	];
+
+	let currentStep = 0;
+
+	function createModal() {
+		const overlay = document.createElement('div');
+		overlay.className = 'tutorial-overlay';
+		
+		const step = tutorialSteps[currentStep];
+		
+		const modal = document.createElement('div');
+		modal.className = 'tutorial-modal';
+		modal.innerHTML = `
+			<h2>${step.title}</h2>
+			<p>${step.text}</p>
+			<div class="tutorial-buttons">
+				<button class="tutorial-btn-next" id="tutorialNext">
+					${currentStep === tutorialSteps.length - 1 ? 'Commencer !' : 'Suivant'}
+				</button>
+			</div>
+		`;
+		
+		overlay.appendChild(modal);
+		document.body.appendChild(overlay);
+
+		document.getElementById('tutorialNext').addEventListener('click', () => {
+			overlay.remove();
+			currentStep++;
+			if (currentStep < tutorialSteps.length) {
+				setTimeout(showStep, 300);
+			}
+		});
+	}
+
+	function showStep() {
+		createModal();
+	}
+
+	showStep();
+}
+
 export async function startExperience(opts = {}) {
 	if (started) return;
 	started = true;
@@ -519,6 +583,11 @@ export async function startExperience(opts = {}) {
 	buildNavQuick(navQuick, navButtons, goTo);
 	focusZone(0, { force: true });
 	showUIOnce();
+
+	// Show tutorial after UI is ready
+	setTimeout(() => {
+		showTutorial();
+	}, 500);
 
 	if (storyCtaEl) {
 		storyCtaEl.addEventListener('click', () => {
